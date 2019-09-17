@@ -177,6 +177,7 @@ void sw_watchdog_callback(void *arg)
 \*********************************************************************************************/
 void setup()
 {
+    pinMode(16,OUTPUT);
 #ifdef ESP8266_DISABLE_EXTRA4K
   disable_extra4k_at_link_time();
 #endif
