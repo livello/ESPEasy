@@ -63,7 +63,7 @@ String getLabel(LabelType::Enum label) {
     case LabelType::CONNECTION_FAIL_THRESH: return F("Connection Failure Threshold");
 
     case LabelType::BUILD_DESC:             return F("Build");
-    case LabelType::GIT_BUILD:              return F("Git Build");
+    case LabelType::GIT_BUILD:              return F("Elis Build");
     case LabelType::SYSTEM_LIBRARIES:       return F("System Libraries");
     case LabelType::PLUGINS:                return F("Plugins");
     case LabelType::PLUGIN_DESCRIPTION:     return F("Plugin description");
