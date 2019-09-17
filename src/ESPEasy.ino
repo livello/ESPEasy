@@ -90,15 +90,6 @@
 // Plugin helper needs the defined controller sets, thus include after 'define_plugin_sets.h'
 #include "_CPlugin_Helper.h"
 #include "ControllerQueue/DelayQueueElements.h"
-#include "ESPEasyWifi.ino"
-#include "ESPEasy_checks.ino"
-#include "Misc.ino"
-#include "ESPEasy_Log.ino"
-#include "ESPEasyStorage.ino"
-#include "Serial.ino"
-#include "Scheduler.ino"
-#include "__CPlugin.ino"
-#include "ESPEasyRTC.ino"
 
 
 // Get functions to give access to global defined variables.
@@ -580,7 +571,7 @@ void loop()
 
   if (readyForSleep()){
       digitalWrite(16,HIGH);
-      deepSleep(Settings.Delay);
+    deepSleep(Settings.Delay);
     //deepsleep will never return, its a special kind of reboot
   }
 }
