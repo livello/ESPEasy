@@ -148,7 +148,7 @@ void sw_watchdog_callback(void *arg)
 \*********************************************************************************************/
 void setup()
 {
-    pinMode(16,OUTPUT);
+    pinMode(13,OUTPUT);
 #ifdef ESP8266_DISABLE_EXTRA4K
   disable_extra4k_at_link_time();
 #endif
@@ -570,7 +570,7 @@ void loop()
   backgroundtasks();
 
   if (readyForSleep()){
-      digitalWrite(16,HIGH);
+      digitalWrite(13,HIGH);
     deepSleep(Settings.Delay);
     //deepsleep will never return, its a special kind of reboot
   }
