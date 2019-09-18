@@ -20,7 +20,7 @@ DallasTemperature sensors(&oneWire);
 //uint8_t Plugin_129_DallasPin;
 //DeviceAddress 	currAddress;
 uint8_t 		numberOfDevices;
-
+#define DS2482_I2C_ADDRESS      0x18 // I2C address for the sensor
 
 
 boolean Plugin_129(byte function, struct EventStruct * event, String& string)
@@ -72,9 +72,9 @@ boolean Plugin_129(byte function, struct EventStruct * event, String& string)
             }
 
             // find all suitable devices
-            addRowLabel(string, F("Device Address"));
-            addSelector_Head(string, F("plugin_129_dev"), false);
-            addSelector_Item(string, -1, false, false, F(""));
+            addRowLabel(F("Device Address"));
+            addSelector_Head(F("plugin_129_dev"), false);
+            addSelector_Item("", -1, false, false, F(""));
             uint8_t tmpAddress[8];
             byte count = 0;
 
@@ -89,7 +89,7 @@ boolean Plugin_129(byte function, struct EventStruct * event, String& string)
                     if (j < 7) option += F("-");
                 }
 				bool selected = (memcmp(tmpAddress, savedAddress, 8) == 0) ? true : false;
-                addSelector_Item(string/*, option*/, count, selected, false, F(""));
+                addSelector_Item(option, count, selected, false, F(""));
                 count ++;
 			}
 			/*
@@ -106,7 +106,7 @@ boolean Plugin_129(byte function, struct EventStruct * event, String& string)
                 count ++;
             }
 			*/
-            addSelector_Foot(/*string*/);
+            addSelector_Foot();
 
             // Device Resolution select
             if (ExtraTaskSettings.TaskDevicePluginConfigLong[0] != 0)
@@ -115,8 +115,7 @@ boolean Plugin_129(byte function, struct EventStruct * event, String& string)
                 resolutionChoice = 9;
             String resultsOptions[4] = { "9", "10", "11", "12" };
             int resultsOptionValues[4] = { 9, 10, 11, 12 };
-            addFormSelector( F("Device Resolution"), F("plugin_129_res"), 4, resultsOptions, resultsOptionValues, resolutionChoice);
-//            addFormSelector(F("Doubleclick event"), F("p009_dc"), 4, buttonDC, buttonDCValues, choiceDC);
+            addFormSelector(F("Device Resolution"), F("plugin_129_res"), 4, resultsOptions, resultsOptionValues, resolutionChoice);
             string += F(" Bit");
 
             success = true;
