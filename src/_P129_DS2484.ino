@@ -6,6 +6,7 @@
 
 #include <OneWire.h>
 #include <DallasTemperature.h>
+#include "ESPEasy_Log.h"
 
 #define PLUGIN_129
 #define PLUGIN_ID_129         129
@@ -15,23 +16,25 @@
 OneWire oneWire;
 DallasTemperature sensors(&oneWire);
 
-//sensors.begin();
 
-//uint8_t Plugin_129_DallasPin;
-//DeviceAddress 	currAddress;
 uint8_t 		numberOfDevices;
 #define DS2482_I2C_ADDRESS      0x18 // I2C address for the sensor
 
 
+void getDeviceCount() {
+    addLog(LOG_LEVEL_ERROR,F("getDeviceCount"));
+    sensors.begin();
+    numberOfDevices = sensors.getDeviceCount();
+}
+
 boolean Plugin_129(byte function, struct EventStruct * event, String& string)
 {
-    addLog(LOG_LEVEL_ERROR,F("Plugin init"));
     boolean success = false;
 
     switch (function)
     {
         case PLUGIN_DEVICE_ADD:
-        {
+           {
             addLog(LOG_LEVEL_ERROR,F("PLUGIN_DEVICE_ADD"));
             Device[++deviceCount].Number           = PLUGIN_ID_129;
             Device[deviceCount].Type               = DEVICE_TYPE_I2C;
@@ -40,7 +43,8 @@ boolean Plugin_129(byte function, struct EventStruct * event, String& string)
             Device[deviceCount].PullUpOption       = false;
             Device[deviceCount].InverseLogicOption = false;
             Device[deviceCount].FormulaOption      = true;
-            Device[deviceCount].ValueCount         = 1;
+            getDeviceCount();
+            Device[deviceCount].ValueCount         = numberOfDevices;
             Device[deviceCount].SendDataOption     = true;
             Device[deviceCount].TimerOption        = true;
             Device[deviceCount].GlobalSyncOption   = true;
@@ -57,7 +61,24 @@ boolean Plugin_129(byte function, struct EventStruct * event, String& string)
         case PLUGIN_GET_DEVICEVALUENAMES:
         {
             addLog(LOG_LEVEL_ERROR,F("getDeviceValueNames"));
-            strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[0], PSTR(PLUGIN_VALUENAME1_129));
+            uint8_t tmpAddress[8];
+            byte count = 0;
+            for (int i=0; i<numberOfDevices; i++)
+            {
+                addLog(LOG_LEVEL_ERROR,F("GetAddress"));
+                sensors.getAddress(tmpAddress, i);
+                String option = "";
+                for (byte j = 0; j < 8; j++)
+                {
+                    option += String(tmpAddress[j], HEX);
+                    if (j < 7) option += F("_");
+                }
+//                bool selected = (memcmp(tmpAddress, savedAddress, 8) == 0) ? true : false;
+//                addSelector_Item(option, count, selected, false, F(""));
+                count ++;
+                strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[i], option.c_str());
+            }
+
             break;
         }
 
@@ -67,7 +88,6 @@ boolean Plugin_129(byte function, struct EventStruct * event, String& string)
             uint8_t savedAddress[8];
             byte resolutionChoice = 0;
             addLog(LOG_LEVEL_ERROR,F("Sensors.begin"));
-            sensors.begin();
 
             // Scan the onewire bus and fill dropdown list with devicecount on this GPIO.
             //Plugin_129_DallasPin = Settings.TaskDevicePin1[event->TaskIndex];
@@ -81,25 +101,7 @@ boolean Plugin_129(byte function, struct EventStruct * event, String& string)
             addRowLabel(F("Device Address"));
             addSelector_Head(F("plugin_129_dev"), false);
             addSelector_Item("", -1, false, false, F(""));
-            uint8_t tmpAddress[8];
-            byte count = 0;
 
-            addLog(LOG_LEVEL_ERROR,F("getDeviceCount"));
-			numberOfDevices = sensors.getDeviceCount();
-			for (int i=0; i<numberOfDevices; i++)
-			{
-                addLog(LOG_LEVEL_ERROR,F("GetAddress"));
-				sensors.getAddress(tmpAddress, i);
-				String option = "";
-				for (byte j = 0; j < 8; j++)
-                {
-                    option += String(tmpAddress[j], HEX);
-                    if (j < 7) option += F("-");
-                }
-				bool selected = (memcmp(tmpAddress, savedAddress, 8) == 0) ? true : false;
-                addSelector_Item(option, count, selected, false, F(""));
-                count ++;
-			}
 			/*
             while (Plugin_129_DS_search(tmpAddress))
             {
