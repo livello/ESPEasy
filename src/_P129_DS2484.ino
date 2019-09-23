@@ -10,7 +10,7 @@
 
 #define PLUGIN_129
 #define PLUGIN_ID_129         129
-#define PLUGIN_NAME_129       "Environment - DS18b20ds2484"
+#define PLUGIN_NAME_129       "Environment - ds2482-100(I2C)ds18b20"
 #define PLUGIN_VALUENAME1_129 "Temperature"
 
 OneWire oneWire;
@@ -42,7 +42,8 @@ boolean Plugin_129(byte function, struct EventStruct * event, String& string)
             Device[deviceCount].Ports              = 0;
             Device[deviceCount].PullUpOption       = false;
             Device[deviceCount].InverseLogicOption = false;
-            Device[deviceCount].FormulaOption      = true;
+            Device[deviceCount].FormulaOption = false;
+            Device[deviceCount].DecimalsOnly = true;
             getDeviceCount();
             Device[deviceCount].ValueCount         = numberOfDevices;
             Device[deviceCount].SendDataOption     = true;
@@ -73,9 +74,8 @@ boolean Plugin_129(byte function, struct EventStruct * event, String& string)
                     option += String(tmpAddress[j], HEX);
                     if (j < 7) option += F("_");
                 }
-//                bool selected = (memcmp(tmpAddress, savedAddress, 8) == 0) ? true : false;
-//                addSelector_Item(option, count, selected, false, F(""));
                 count ++;
+                ExtraTaskSettings.TaskDeviceValueDecimals[i]=2;
                 strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[i], option.c_str());
             }
 
@@ -165,37 +165,45 @@ boolean Plugin_129(byte function, struct EventStruct * event, String& string)
         case PLUGIN_READ:
         {
             if (ExtraTaskSettings.TaskDevicePluginConfigLong[0] != 0){
-                uint8_t addr[8];
+                addLog(LOG_LEVEL_ERROR,F("PLUGIN_READ"));
+                getDeviceCount();
                 // Load ROM address from tasksettings
                 LoadTaskSettings(event->TaskIndex);
-                for (byte x = 0; x < 8; x++)
-                    addr[x] = ExtraTaskSettings.TaskDevicePluginConfigLong[x];
-
-                //Plugin_129_DallasPin = Settings.TaskDevicePin1[event->TaskIndex];
                 float value = 0;
-                String log  = F("DS   : Temperature: ");
-                if (Plugin_129_DS_readTemp(addr, &value))
+                uint8_t tmpAddress[8];
+                for (int i=0; i<numberOfDevices; i++)
                 {
-                    UserVar[event->BaseVarIndex] = value;
-                    log    += UserVar[event->BaseVarIndex];
-                    success = true;
-                }
-                else
-                {
-                    UserVar[event->BaseVarIndex] = NAN;
-                    log += F("Error!");
-                }
+                    addLog(LOG_LEVEL_ERROR,F("GetAddress"));
+                    sensors.getAddress(tmpAddress, i);
+                    String option = "";
+                    addLog(LOG_LEVEL_ERROR,F("Form option-address"));
+                    for (byte j = 0; j < 8; j++)
+                    {
+                        option += String(tmpAddress[j], HEX);
+                        if (j < 7) option += F("_");
+                    }
+                    addLog(LOG_LEVEL_ERROR,F("send TaskDeviceValueNames"));
+                    strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[i], option.c_str());
+                    addLog(LOG_LEVEL_ERROR,F("set decimals"));
+                    ExtraTaskSettings.TaskDeviceValueDecimals[i]=2;
+                    option+= F("DS   : Temperature: ");
+                    addLog(LOG_LEVEL_ERROR,F("Read Value"));
+                    if (Plugin_129_DS_readTemp(tmpAddress, &value))
+                    {
+                        addLog(LOG_LEVEL_ERROR,F("Set value to UserVar"));
+                        UserVar[event->BaseVarIndex+i] = value;
+                        option    += UserVar[event->BaseVarIndex+i];
+                    }
+                    else
+                    {
+                        addLog(LOG_LEVEL_ERROR,F("Set value to UserVar, NAN"));
+                        UserVar[event->BaseVarIndex+i] = NAN;
+                        option += F("Error!");
+                    }
 
-                log += (" (");
-                for (byte x = 0; x < 8; x++)
-                {
-                    if (x != 0)
-                        log += "-";
-                    log += String(ExtraTaskSettings.TaskDevicePluginConfigLong[x], HEX);
+                    addLog(LOG_LEVEL_INFO, option);
                 }
-
-                log += ')';
-                addLog(LOG_LEVEL_INFO, log);
+                success = true;
             }
             break;
         }
@@ -222,7 +230,9 @@ byte Plugin_129_DS_scan(byte getDeviceROM, uint8_t* ROM)
 \*********************************************************************************************/
 boolean Plugin_129_DS_readTemp(uint8_t ROM[8], float * value)
 {
+    addLog(LOG_LEVEL_ERROR,F("sensors.requestTemperaturesByAddress(ROM)"));
   sensors.requestTemperaturesByAddress(ROM);
+    addLog(LOG_LEVEL_ERROR,F("value = sensors.getTempC(ROM);"));
 	*value = sensors.getTempC(ROM);
 
     return true;
