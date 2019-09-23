@@ -25,12 +25,14 @@ uint8_t 		numberOfDevices;
 
 boolean Plugin_129(byte function, struct EventStruct * event, String& string)
 {
+    addLog(LOG_LEVEL_ERROR,F("Plugin init"));
     boolean success = false;
 
     switch (function)
     {
         case PLUGIN_DEVICE_ADD:
         {
+            addLog(LOG_LEVEL_ERROR,F("PLUGIN_DEVICE_ADD"));
             Device[++deviceCount].Number           = PLUGIN_ID_129;
             Device[deviceCount].Type               = DEVICE_TYPE_I2C;
             Device[deviceCount].VType              = SENSOR_TYPE_SINGLE;
@@ -47,20 +49,24 @@ boolean Plugin_129(byte function, struct EventStruct * event, String& string)
 
         case PLUGIN_GET_DEVICENAME:
         {
+            addLog(LOG_LEVEL_ERROR,F("PLUGIN_GET_DEVICENAME"));
             string = F(PLUGIN_NAME_129);
             break;
         }
 
         case PLUGIN_GET_DEVICEVALUENAMES:
         {
+            addLog(LOG_LEVEL_ERROR,F("getDeviceValueNames"));
             strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[0], PSTR(PLUGIN_VALUENAME1_129));
             break;
         }
 
         case PLUGIN_WEBFORM_LOAD:
         {
+            addLog(LOG_LEVEL_ERROR,F("WebFormLoad"));
             uint8_t savedAddress[8];
             byte resolutionChoice = 0;
+            addLog(LOG_LEVEL_ERROR,F("Sensors.begin"));
             sensors.begin();
 
             // Scan the onewire bus and fill dropdown list with devicecount on this GPIO.
@@ -78,9 +84,11 @@ boolean Plugin_129(byte function, struct EventStruct * event, String& string)
             uint8_t tmpAddress[8];
             byte count = 0;
 
+            addLog(LOG_LEVEL_ERROR,F("getDeviceCount"));
 			numberOfDevices = sensors.getDeviceCount();
 			for (int i=0; i<numberOfDevices; i++)
 			{
+                addLog(LOG_LEVEL_ERROR,F("GetAddress"));
 				sensors.getAddress(tmpAddress, i);
 				String option = "";
 				for (byte j = 0; j < 8; j++)
@@ -112,11 +120,11 @@ boolean Plugin_129(byte function, struct EventStruct * event, String& string)
             if (ExtraTaskSettings.TaskDevicePluginConfigLong[0] != 0)
                 resolutionChoice = Plugin_129_DS_getResolution(savedAddress);
             else
-                resolutionChoice = 9;
+                resolutionChoice = 11;
             String resultsOptions[4] = { "9", "10", "11", "12" };
             int resultsOptionValues[4] = { 9, 10, 11, 12 };
             addFormSelector(F("Device Resolution"), F("plugin_129_res"), 4, resultsOptions, resultsOptionValues, resolutionChoice);
-            string += F(" Bit");
+            addHtml(F(" Bit"));
 
             success = true;
             break;
@@ -124,6 +132,7 @@ boolean Plugin_129(byte function, struct EventStruct * event, String& string)
 
         case PLUGIN_WEBFORM_SAVE:
         {
+            addLog(LOG_LEVEL_ERROR,F("WebFormSave"));
             uint8_t addr[8] = {0,0,0,0,0,0,0,0};
 
             // save the address for selected device and store into extra tasksettings
