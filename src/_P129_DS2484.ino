@@ -4,9 +4,10 @@
 
 //	This is a modification to Plugin_004
 
-#include <OneWire.h>
+#include <DS2482_OneWire.h>
 #include <DallasTemperature.h>
 #include "ESPEasy_Log.h"
+#include "ESPEasy-Globals.h"
 
 #define PLUGIN_129
 #define PLUGIN_ID_129         129
@@ -27,6 +28,28 @@ void getDeviceCount() {
     numberOfDevices = sensors.getDeviceCount();
 }
 
+void applyDeviceCount() {
+    getDeviceCount();
+    switch(numberOfDevices){
+        case 0:
+            Device[deviceCount].VType              = SENSOR_TYPE_NONE;
+            break;
+        case 1:
+            Device[deviceCount].VType              = SENSOR_TYPE_SINGLE;
+            break;
+        case 2:
+            Device[deviceCount].VType              = SENSOR_TYPE_DUAL;
+            break;
+        case 3:
+            Device[deviceCount].VType              = SENSOR_TYPE_TRIPLE;
+            break;
+        default:
+            Device[deviceCount].VType              = SENSOR_TYPE_QUAD;
+
+    }
+    Device[deviceCount].ValueCount         = numberOfDevices;
+}
+
 boolean Plugin_129(byte function, struct EventStruct * event, String& string)
 {
     boolean success = false;
@@ -38,14 +61,12 @@ boolean Plugin_129(byte function, struct EventStruct * event, String& string)
             addLog(LOG_LEVEL_ERROR,F("PLUGIN_DEVICE_ADD"));
             Device[++deviceCount].Number           = PLUGIN_ID_129;
             Device[deviceCount].Type               = DEVICE_TYPE_I2C;
-            Device[deviceCount].VType              = SENSOR_TYPE_SINGLE;
             Device[deviceCount].Ports              = 0;
             Device[deviceCount].PullUpOption       = false;
             Device[deviceCount].InverseLogicOption = false;
             Device[deviceCount].FormulaOption = false;
             Device[deviceCount].DecimalsOnly = true;
-            getDeviceCount();
-            Device[deviceCount].ValueCount         = numberOfDevices;
+            applyDeviceCount();
             Device[deviceCount].SendDataOption     = true;
             Device[deviceCount].TimerOption        = true;
             Device[deviceCount].GlobalSyncOption   = true;
@@ -164,12 +185,12 @@ boolean Plugin_129(byte function, struct EventStruct * event, String& string)
 
         case PLUGIN_READ:
         {
+            float value[8];
             if (ExtraTaskSettings.TaskDevicePluginConfigLong[0] != 0){
                 addLog(LOG_LEVEL_ERROR,F("PLUGIN_READ"));
-                getDeviceCount();
+                applyDeviceCount();
                 // Load ROM address from tasksettings
                 LoadTaskSettings(event->TaskIndex);
-                float value = 0;
                 uint8_t tmpAddress[8];
                 for (int i=0; i<numberOfDevices; i++)
                 {
@@ -186,22 +207,19 @@ boolean Plugin_129(byte function, struct EventStruct * event, String& string)
                     strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[i], option.c_str());
                     addLog(LOG_LEVEL_ERROR,F("set decimals"));
                     ExtraTaskSettings.TaskDeviceValueDecimals[i]=2;
-                    option+= F("DS   : Temperature: ");
+                    option+= F(" : Temperature: ");
                     addLog(LOG_LEVEL_ERROR,F("Read Value"));
-                    if (Plugin_129_DS_readTemp(tmpAddress, &value))
+                    if (Plugin_129_DS_readTemp(tmpAddress, &value[i]))
                     {
-                        addLog(LOG_LEVEL_ERROR,F("Set value to UserVar"));
-                        UserVar[event->BaseVarIndex+i] = value;
-                        option    += UserVar[event->BaseVarIndex+i];
+                        option    += value[i];
                     }
                     else
                     {
-                        addLog(LOG_LEVEL_ERROR,F("Set value to UserVar, NAN"));
-                        UserVar[event->BaseVarIndex+i] = NAN;
+                        value[i] = NAN;
                         option += F("Error!");
                     }
-
                     addLog(LOG_LEVEL_INFO, option);
+                    UserVar[event->BaseVarIndex+i] = value[i];
                 }
                 success = true;
             }
