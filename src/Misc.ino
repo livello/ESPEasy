@@ -1,7 +1,7 @@
 /*********************************************************************************************\
    ESPEasy specific strings
 \*********************************************************************************************/
-boolean timerAPstart_enabled=false;
+
 
 String getNodeTypeDisplayString(byte nodeType) {
   switch (nodeType)
@@ -357,11 +357,7 @@ bool isDeepSleepEnabled()
 
   if (!digitalRead(5))
   {
-      if(!timerAPstart_enabled) {
-          addLog(LOG_LEVEL_ERROR,F("handle_setup"));
-          handle_setup();
-          timerAPstart_enabled=true;
-      }
+
       return false;
   }
   return true;
