@@ -370,11 +370,12 @@ bool isDeepSleepEnabled()
   // recommended wiring: 3-pin-header with 1=RST, 2=D0, 3=GND
   //                    short 1-2 for normal deep sleep / wakeup loop
   //                    short 2-3 to cancel sleep loop for modifying settings
-  pinMode(16, INPUT_PULLUP);
+  pinMode(5, INPUT_PULLUP);
 
-  if (!digitalRead(16))
+  if (!digitalRead(5))
   {
-    return false;
+
+      return false;
   }
   return true;
 }
@@ -417,7 +418,7 @@ void prepare_deepSleep(int dsdelay)
     // disabled?
     if (!isDeepSleepEnabled())
     {
-      addLog(LOG_LEVEL_INFO, F("SLEEP: Deep sleep cancelled (GPIO16 connected to GND)"));
+      addLog(LOG_LEVEL_ERROR, F("SLEEP: Deep sleep cancelled (Setup Mode)"));
       return;
     }
   }
@@ -444,7 +445,10 @@ void deepSleepStart(int dsdelay)
   if ((deepSleep_usec > ESP.deepSleepMax()) || (dsdelay < 0)) {
     deepSleep_usec = ESP.deepSleepMax();
   }
-  ESP.deepSleepInstant(deepSleep_usec, WAKE_RF_DEFAULT);
+  addLog(LOG_LEVEL_ERROR,F("GPIO13 set HIGH. DONE!"));
+  pinMode(13, OUTPUT);
+  digitalWrite(13,HIGH);
+//  ESP.deepSleepInstant(deepSleep_usec, WAKE_RF_DEFAULT);
     # else // if defined(CORE_POST_2_5_0)
 
   if ((dsdelay > 4294) || (dsdelay < 0)) {
